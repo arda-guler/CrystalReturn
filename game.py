@@ -87,9 +87,9 @@ def main():
     powerups_max_num = 2
 
     wing_touch_volume = 0
-    engine_volume = player.speed / player.boost_speed
+    engine_volume = player.speed / (player.boost_speed * 4)
     play_sfx("engine", -1, 6, engine_volume)
-    #play_bgm("crystal_gate")
+    #play_random_bgm()
     
     while not glfw.window_should_close(mwin):
         glfw.poll_events()
@@ -118,9 +118,19 @@ def main():
 
         # POWERUP GENERATION
         if len(powerups) < powerups_max_num and random.uniform(0, 100) > 99.95:
-            new_size = vec3(5, 5, 5)
-            new_pos = vec3(random.uniform(-250, 250), new_size.y/2, -500 + random.uniform(-100, 100))
-            new_powerup = speed_boost(new_pos, new_size)
+            
+            powerup_type = random.choice(["speed", "invulnerability"])
+
+            if powerup_type == "speed":
+                new_size = vec3(5, 5, 5)
+                new_pos = vec3(random.uniform(-250, 250), new_size.y/2, -500 + random.uniform(-100, 100))
+                new_powerup = speed_boost(new_pos, new_size)
+
+            elif powerup_type == "invulnerability":
+                new_size = vec3(2, 2, 2)
+                new_pos = vec3(random.uniform(-250, 250), new_size.y/2, -500 + random.uniform(-100, 100))
+                new_powerup = invulnerability(new_pos, new_size)
+                
             powerups.append(new_powerup)
 
         # SCENE UPDATE
@@ -133,19 +143,27 @@ def main():
         for o in obstacles:
             o.update_pos(player, dt)
 
-            if o.check_collision():
-                crash = True
-                stop_channel(5)
-                stop_channel(6)
-                stop_channel(7)
-                play_sfx("crash", 0, 1, 0.3)
-                print("CRASH!")
-                time.sleep(5)
-                quit()
-            
             if o.pos.z > 10:
                 obstacles.remove(o)
                 del o
+
+            else:
+                if o.check_collision():
+                    if player.shields_remaining <= 0:
+                        crash = True
+                        stop_channel(5)
+                        stop_channel(6)
+                        stop_channel(7)
+                        play_sfx("crash", 0, 1, 0.3)
+                        print("CRASH!")
+                        time.sleep(5)
+                        quit()
+
+                    else:
+                        play_sfx("shield_activate")
+                        player.shields_remaining -= 1
+                        obstacles.remove(o)
+                        del o
 
         # POWERUP UPDATE AND CLEANUP
         for p in powerups:
@@ -160,6 +178,12 @@ def main():
                     if p.powerup_type == "speed_boost":
                         play_sfx("speed_boost", 0, 1, 0.4)
                         player.boost_remaining = 25
+                        powerups.remove(p)
+                        del p
+
+                    elif p.powerup_type == "invulnerability" and player.shields_remaining < 2:
+                        play_sfx("shield_pickup", 0, 1, 0.4)
+                        player.shields_remaining += 1
                         powerups.remove(p)
                         del p
 
@@ -190,8 +214,12 @@ def main():
                 stop_channel(5)
 
         # ENGINE SFX
-        engine_volume = player.speed / player.boost_speed
+        engine_volume = player.speed / (player.boost_speed * 4)
         set_channel_volume(6, engine_volume)
+
+        # BGM
+        #if not is_music_playing():
+            #play_random_bgm()
 
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
         drawScene(main_cam, player, floor, obstacles, powerups, luna, dt, score)

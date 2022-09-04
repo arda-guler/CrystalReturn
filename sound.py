@@ -1,5 +1,6 @@
 from pygame import mixer
 import os
+import random
 
 bgms = {}
 
@@ -37,5 +38,12 @@ def play_bgm(track, channel=7):
     global bgms
     chn = mixer.Channel(7)
     msc = bgms[track]
+    chn.set_volume(1)
+    chn.play(msc)
+
+def play_random_bgm(channel=7):
+    global bgms
+    chn = mixer.Channel(7)
+    msc = random.choice(list(bgms.values()))
     chn.set_volume(1)
     chn.play(msc)

@@ -16,13 +16,13 @@ class mirage:
         self.color = color
         self.bank = 0
         self.bankspeed = 57
-        self.powerups = []
 
         self.max_bank = 25
         self.accel = 50
         self.decel = 30
 
         self.boost_remaining = 0
+        self.shields_remaining = 0
 
     def get_color(self):
         return self.color

@@ -43,6 +43,10 @@ def play_bgm(track, channel=7):
 
 def play_random_bgm(channel=7):
     global bgms
+    
+    if not bgms:
+        return
+    
     chn = mixer.Channel(7)
     msc = random.choice(list(bgms.values()))
     chn.set_volume(1)

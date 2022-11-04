@@ -3,13 +3,23 @@ from OpenGL.GL import *
 from OpenGL.GLU import *
 import math
 import random
+import pywavefront
 
 from math_utils import *
 from ui import *
 from vector3 import *
+from poems import poem_list
 
 floor_z_offset = 0
 floor_x_offset = 0
+
+shield_model = pywavefront.Wavefront("data/models/shield.obj", collect_faces=True)
+speed_time_remaining = 0
+shield_hexagon_step = 0
+last_num_shields = 0
+
+poem_line_countdown = 0
+last_poem_line = 0
 
 def calcTransparentColor(background_color, main_color, alpha=0.5):
     delta_r = background_color[0] - main_color[0]
@@ -101,7 +111,7 @@ def drawScoreCounter(x1, y1, camera, score, colorScore, text_size=0.075):
     render_AN("SCORE: " + str(round(score,1)), colorScore, [x1, y1], camera, text_size)
 
 def drawGround(floor, mirage, dt, size=250, divisions=20):
-    global floor_x_offset, floor_z_offset
+    global floor_x_offset, floor_z_offset, shield_hexagon_step
 
     y_floor = floor.height
     glColor(floor.color[0], floor.color[1], floor.color[2])
@@ -109,12 +119,12 @@ def drawGround(floor, mirage, dt, size=250, divisions=20):
     glBegin(GL_LINES)
     
     for xi in range(divisions + 1):
-        glVertex3f(2* xi * (size/divisions) - size + floor_x_offset, y_floor, -size)
-        glVertex3f(2* xi * (size/divisions) - size + floor_x_offset, y_floor, +size)
+        glVertex3f(2* xi * (size/divisions) - size + floor_x_offset, y_floor + random.uniform(-1, 1) * shield_hexagon_step/500, -size)
+        glVertex3f(2* xi * (size/divisions) - size + floor_x_offset, y_floor + random.uniform(-1, 1) * shield_hexagon_step/500, +size)
 
     for zi in range(divisions + 1):
-        glVertex3f(-size, y_floor, 2* zi * (size/divisions) - size + floor_z_offset)
-        glVertex3f(+size, y_floor, 2* zi * (size/divisions) - size + floor_z_offset)
+        glVertex3f(-size, y_floor + random.uniform(-1, 1) * shield_hexagon_step/500, 2* zi * (size/divisions) - size + floor_z_offset)
+        glVertex3f(+size, y_floor + random.uniform(-1, 1) * shield_hexagon_step/500, 2* zi * (size/divisions) - size + floor_z_offset)
 
     glEnd()
 
@@ -217,11 +227,6 @@ def drawCursors(cursors, camera):
 
 def drawObstaclesAndPowerups(comblist):
     for o in comblist:
-        
-        glPushMatrix()
-
-        glTranslatef(o.pos.x, o.pos.y, o.pos.z)
-        glScalef(o.size.x, o.size.y, o.size.z)
 
         main_color = o.color
         background_color = [0.1, 0.1, 0.25]
@@ -230,52 +235,26 @@ def drawObstaclesAndPowerups(comblist):
             alpha = min(max(     1-((-o.pos.z-300)/300)         , 0), 1)
             main_color = calcTransparentColor(background_color, main_color, alpha)
 
-        for mesh in o.model.mesh_list:
-            glColor(main_color[0], main_color[1], main_color[2])
-            glPolygonMode(GL_FRONT, GL_FILL)
-            glBegin(GL_POLYGON)
-            for face in mesh.faces:
-                for vertex_i in face:
-                    glVertex3f(*o.model.vertices[vertex_i])
-            glEnd()
-
-            glColor(main_color[0] + 0.1, main_color[1] + 0.1, main_color[2] + 0.1)
-            glPolygonMode(GL_FRONT, GL_LINE)
-            glBegin(GL_TRIANGLES)
-            for face in mesh.faces:
-                for vertex_i in face:
-                    glVertex3f(*o.model.vertices[vertex_i])
-            glEnd()
-
-        glPopMatrix()
+        if o.rot:
+            drawModelGeneric(o.model,
+                             [o.pos.x, o.pos.y, o.pos.z],
+                             [1, o.rot.x, o.rot.y, o.rot.z],
+                             [o.size.x, o.size.y, o.size.z],
+                             main_color)
+        else:
+            drawModelGeneric(o.model,
+                             [o.pos.x, o.pos.y, o.pos.z],
+                             False,
+                             [o.size.x, o.size.y, o.size.z],
+                             main_color)
 
 def drawMirage(mirage):
-    
-    # here we go
-    glPushMatrix()
 
-    # put us in correct position
+    drawModelGeneric(mirage.model, [0,0,0], [-mirage.bank, 0, 0, 1], False, mirage.get_color(), True, False)
+
+    glPushMatrix()
     glTranslatef(0, 0, 0)
     glRotatef(-mirage.bank, 0, 0, 1)
-
-    # actually render model now
-    for mesh in mirage.model.mesh_list:
-##        glColor(mirage.get_color()[0]/1.25, mirage.get_color()[1]/1.25, mirage.get_color()[2]/1.25)
-##        glPolygonMode(GL_FRONT, GL_FILL)
-##        glBegin(GL_POLYGON)
-##        for face in mesh.faces:
-##            for vertex_i in face:
-##                glVertex3f(*mirage.model.vertices[vertex_i])
-##        glEnd()
-
-        glColor(mirage.get_color()[0], mirage.get_color()[1], mirage.get_color()[2])
-        glPolygonMode(GL_FRONT, GL_LINE)
-        glBegin(GL_TRIANGLES)
-        for face in mesh.faces:
-            for vertex_i in face:
-                glVertex3f(*mirage.model.vertices[vertex_i])
-        glEnd()
-
     # do sparks
     spark_spread = 0.05
     if mirage.bank >= mirage.max_bank:
@@ -314,12 +293,159 @@ def drawMirage(mirage):
     # now get out
     glPopMatrix()
 
+def drawSpeedArrows(cam):
+    global speed_time_remaining
+
+    if not speed_time_remaining:
+        return
+
+    if speed_time_remaining < 0:
+        speed_time_remaining = 0
+        return
+
+    state = int(speed_time_remaining*10 % 4)
+
+    if state == 3:
+        drawLine2D(6, 2, 5, 0, [0,1,0], cam)
+        drawLine2D(6, -2, 5, 0, [0,1,0], cam)
+
+        drawLine2D(-6, 2, -5, 0, [0,1,0], cam)
+        drawLine2D(-6, -2, -5, 0, [0,1,0], cam)
+        
+    elif state == 2:
+        drawLine2D(5, 2, 4, 0, [0,1,0], cam)
+        drawLine2D(5, -2, 4, 0, [0,1,0], cam)
+
+        drawLine2D(-5, 2, -4, 0, [0,1,0], cam)
+        drawLine2D(-5, -2, -4, 0, [0,1,0], cam)
+        
+    elif state == 1:
+        drawLine2D(4, 2, 3, 0, [0,1,0], cam)
+        drawLine2D(4, -2, 3, 0, [0,1,0], cam)
+
+        drawLine2D(-4, 2, -3, 0, [0,1,0], cam)
+        drawLine2D(-4, -2, -3, 0, [0,1,0], cam)
+        
+def drawShieldHexagon(cam):
+    global shield_hexagon_step
+
+    if not shield_hexagon_step:
+        return
+
+    hex_size = (1.1 - int(shield_hexagon_step % 50) * 0.025)
+    
+    drawLine2D(3*hex_size, 5.196*hex_size, -3*hex_size, 5.196*hex_size, [1,0,1], cam)
+    drawLine2D(3*hex_size, -5.196*hex_size, -3*hex_size, -5.196*hex_size, [1,0,1], cam)
+    drawLine2D(6*hex_size, 0, 3*hex_size, 5.196*hex_size, [1,0,1], cam)
+    drawLine2D(-6*hex_size, 0, -3*hex_size, 5.196*hex_size, [1,0,1], cam)
+    drawLine2D(6*hex_size, 0, 3*hex_size, -5.196*hex_size, [1,0,1], cam)
+    drawLine2D(-6*hex_size, 0, -3*hex_size, -5.196*hex_size, [1,0,1], cam)
+
+    shield_hexagon_step -= 1
+
 def drawLuna(luna, cam):
 
-    glPointSize(10)
+    glPointSize(15)
     drawPoint2D(0, luna.height/150, luna.color, cam)
 
-def drawScene(cam, mirage, floor, obstacles, powerups, luna, dt, score):
+def drawModelGeneric(model, pos, rot, scale, color, line=True, poly=True):
+    
+    glPushMatrix()
+    
+    glTranslatef(pos[0], pos[1], pos[2])
+
+    if rot:
+        glRotatef(rot[0], rot[1], rot[2], rot[3])
+
+    if scale:
+        glScalef(scale[0], scale[1], scale[2])
+        
+    glColor(color[0], color[1], color[2])
+
+    if poly and line:
+        for mesh in model.mesh_list:
+            glColor(color[0]-0.1, color[1]-0.1, color[2]-0.1)
+            glPolygonMode(GL_FRONT, GL_FILL)
+            glBegin(GL_POLYGON)
+            for face in mesh.faces:
+                for vertex_i in face:
+                    glVertex3f(*model.vertices[vertex_i])
+            glEnd()
+
+            glColor(color[0], color[1], color[2])
+            glPolygonMode(GL_FRONT, GL_LINE)
+            glBegin(GL_TRIANGLES)
+            for face in mesh.faces:
+                for vertex_i in face:
+                    glVertex3f(*model.vertices[vertex_i])
+            glEnd()
+            
+    elif poly:
+        for mesh in model.mesh_list:
+            glPolygonMode(GL_FRONT, GL_FILL)
+            glBegin(GL_POLYGON)
+            for face in mesh.faces:
+                for vertex_i in face:
+                    glVertex3f(*model.vertices[vertex_i])
+            glEnd()
+
+    elif line:
+        for mesh in model.mesh_list:
+            glPolygonMode(GL_FRONT, GL_LINE)
+            glBegin(GL_TRIANGLES)
+            for face in mesh.faces:
+                for vertex_i in face:
+                    glVertex3f(*model.vertices[vertex_i])
+            glEnd()
+
+    glPopMatrix()
+
+def drawShieldCount(num_shields, score):
+    global shield_model
+
+    rotation = (score % 500)/500 * 360
+
+    if num_shields > 0:
+        # shield 1
+        drawModelGeneric(shield_model, [6,-2.5,-1], [rotation,0,1,0], False, [1,0,1])
+        
+        if num_shields == 2:
+            # shield 2
+            drawModelGeneric(shield_model, [8,-2.5,-1], [rotation,0,1,0], False, [1,0,1])
+
+def drawPoem(p_index, p_line, dt, cam):
+    global poem_line_countdown
+    
+    p = poem_list[p_index]
+    p_line_max = len(p)
+
+    if p_line_max < p_line or p_line < 0:
+        return
+
+    if poem_line_countdown < 0:
+        poem_line_countdown = 0
+        return
+    
+    if poem_line_countdown:
+        current_line = p[p_line]
+        poem_line_countdown -= dt
+        print(poem_line_countdown)
+        render_AN(current_line, [1,0,0], [-5, 3], cam, 0.075)
+
+def drawScene(cam, mirage, floor, obstacles, powerups, luna, dt, score, num_shields,
+              poem_index, poem_line):
+    
+    global speed_time_remaining, last_num_shields, shield_hexagon_step, last_poem_line, poem_line_countdown
+    speed_time_remaining = mirage.boost_remaining
+    if num_shields < last_num_shields:
+        shield_hexagon_step = 300
+
+    last_num_shields = num_shields
+
+    if not last_poem_line == poem_line:
+        poem_line_countdown = 10
+        last_poem_line = poem_line
+    
     comblist = obstacles + powerups
     comblist.sort(key=lambda x: mag([-x.pos.x - cam.pos.x, -x.pos.y - cam.pos.y, -x.pos.z - cam.pos.z]), reverse=True)
 
@@ -328,6 +454,10 @@ def drawScene(cam, mirage, floor, obstacles, powerups, luna, dt, score):
     drawGround(floor, mirage, dt)
     drawObstaclesAndPowerups(comblist)
     drawMirage(mirage)
+    drawShieldCount(num_shields, score)
     drawScoreCounter(-3, 4, cam, score, [1,0,0])
+    drawSpeedArrows(cam)
+    drawShieldHexagon(cam)
+    drawPoem(poem_index, poem_line, dt, cam)
     #drawOrigin()
 

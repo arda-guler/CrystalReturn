@@ -1,12 +1,10 @@
 import pywavefront
 
 class speed_boost:
-    def __init__(self, pos, size, model="powerup"):
-
-        model_full_path = "data/models/" + model + ".obj"
-
-        self.model = pywavefront.Wavefront(model_full_path, collect_faces=True)
+    def __init__(self, pos, size, model):
+        self.model = model
         self.pos = pos
+        self.rot = False
         self.size = size
         self.color = [0, 0.8, 0]
 
@@ -26,12 +24,10 @@ class speed_boost:
         self.pos.x -= mirage.get_side_speed(dt)
 
 class invulnerability:
-    def __init__(self, pos, size, model="shield"):
-
-        model_full_path = "data/models/" + model + ".obj"
-
-        self.model = pywavefront.Wavefront(model_full_path, collect_faces=True)
+    def __init__(self, pos, size, model):
+        self.model = model
         self.pos = pos
+        self.rot = False
         self.size = size
         self.color = [1, 0, 1]
 

@@ -53,8 +53,8 @@ def main():
     init_sound()
 
     print("Setting up graphics...")
-    window_x = 1200
-    window_y = 800
+    window_x = 1280
+    window_y = 720
     mwin = glfw.create_window(window_x, window_y, "Crystal Return", None, None)
     glfw.set_window_pos(mwin, 50, 50)
     glfw.make_context_current(mwin)

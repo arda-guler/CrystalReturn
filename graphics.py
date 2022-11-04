@@ -346,7 +346,16 @@ def drawShieldHexagon(cam):
 def drawLuna(luna, cam):
 
     glPointSize(15)
-    drawPoint2D(0, luna.height/150, luna.color, cam)
+
+    if luna.height > 50:
+        drawPoint2D(0, luna.height/150, luna.color, cam)
+    elif luna.height > 0:
+        background_color = [0.1, 0.1, 0.25]
+        alpha = luna.height/50
+        color = calcTransparentColor(background_color, luna.color, alpha)
+        drawPoint2D(0, luna.height/150, color, cam)
+    else:
+        pass
 
 def drawModelGeneric(model, pos, rot, scale, color, line=True, poly=True):
     
@@ -448,8 +457,8 @@ def drawScene(cam, mirage, floor, obstacles, powerups, luna, dt, score, num_shie
     comblist = obstacles + powerups
     comblist.sort(key=lambda x: mag([-x.pos.x - cam.pos.x, -x.pos.y - cam.pos.y, -x.pos.z - cam.pos.z]), reverse=True)
 
-    drawLine2D(-35, 0, 35, 0, floor.color, cam) # draw a horizon
     drawLuna(luna, cam)
+    drawLine2D(-35, 0, 35, 0, floor.color, cam) # draw a horizon
     drawGround(floor, mirage, dt)
     drawObstaclesAndPowerups(comblist)
     drawMirage(mirage)

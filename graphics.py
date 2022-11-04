@@ -429,7 +429,6 @@ def drawPoem(p_index, p_line, dt, cam):
     if poem_line_countdown:
         current_line = p[p_line]
         poem_line_countdown -= dt
-        print(poem_line_countdown)
         render_AN(current_line, [1,0,0], [-5, 3], cam, 0.075)
 
 def drawScene(cam, mirage, floor, obstacles, powerups, luna, dt, score, num_shields,

@@ -428,7 +428,7 @@ def drawPoem(p_index, p_line, dt, cam):
     p = poem_list[p_index]
     p_line_max = len(p)
 
-    if p_line_max < p_line or p_line < 0:
+    if p_line_max <= p_line or p_line < 0:
         return
 
     if poem_line_countdown < 0:

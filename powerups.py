@@ -1,6 +1,20 @@
 import pywavefront
 
-class speed_boost:
+class powerup:
+    def check_collision(self):
+        if ((self.pos.x + self.size.x > 0 and self.pos.x - self.size.x < 0) and
+            (self.pos.y + self.size.y > 0 and self.pos.y - self.size.y < 0) and
+            (self.pos.z + self.size.z > 0 and self.pos.z - self.size.z < 0)):
+            return True
+
+        else:
+            return False
+
+    def update_pos(self, mirage, dt):
+        self.pos.z += mirage.speed * dt
+        self.pos.x -= mirage.get_side_speed(dt)
+
+class speed_boost(powerup):
     def __init__(self, pos, size, model):
         self.model = model
         self.pos = pos
@@ -10,20 +24,7 @@ class speed_boost:
 
         self.powerup_type = "speed_boost"
 
-    def check_collision(self):
-        if ((self.pos.x + self.size.x > 0 and self.pos.x - self.size.x < 0) and
-            (self.pos.y + self.size.y > 0 and self.pos.y - self.size.y < 0) and
-            (self.pos.z + self.size.z > 0 and self.pos.z - self.size.z < 0)):
-            return True
-
-        else:
-            return False
-
-    def update_pos(self, mirage, dt):
-        self.pos.z += mirage.speed * dt
-        self.pos.x -= mirage.get_side_speed(dt)
-
-class invulnerability:
+class invulnerability(powerup):
     def __init__(self, pos, size, model):
         self.model = model
         self.pos = pos
@@ -33,16 +34,13 @@ class invulnerability:
 
         self.powerup_type = "invulnerability"
 
-    def check_collision(self):
-        if ((self.pos.x + self.size.x > 0 and self.pos.x - self.size.x < 0) and
-            (self.pos.y + self.size.y > 0 and self.pos.y - self.size.y < 0) and
-            (self.pos.z + self.size.z > 0 and self.pos.z - self.size.z < 0)):
-            return True
+class agility(powerup):
+    def __init__(self, pos, size, model):
+        self.model = model
+        self.pos = pos
+        self.rot = False
+        self.size = size
+        self.color = [0.8,0.8,0]
 
-        else:
-            return False
-
-    def update_pos(self, mirage, dt):
-        self.pos.z += mirage.speed * dt
-        self.pos.x -= mirage.get_side_speed(dt)
+        self.powerup_type = "agility"
         

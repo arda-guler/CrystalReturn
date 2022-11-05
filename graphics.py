@@ -422,6 +422,37 @@ def drawShieldCount(num_shields, score):
             # shield 2
             drawModelGeneric(shield_model, [8,-2.5,-1], [rotation,0,1,0], False, [1,0,1])
 
+def drawAgilityArrows(mirage, cam):
+    
+    if not mirage.agility_remaining:
+        return
+
+    if abs(mirage.bank) > 5:
+        num_arrows = int((abs(mirage.bank) - 5)/5)
+        
+        # arrows to left
+        if mirage.bank < 0:
+            y_pos = -3
+            x_pos = -3
+
+            for i in range(num_arrows):
+                # drawLine2D(x1, y1, x2, y2, color, camera)
+                drawLine2D(x_pos, y_pos, x_pos + 0.5, y_pos + 0.5, [0.8,0.8,0], cam)
+                drawLine2D(x_pos, y_pos, x_pos + 0.5, y_pos - 0.5, [0.8,0.8,0], cam)
+                x_pos -= 1
+
+        # arrows to right
+        else:
+            y_pos = -3
+            x_pos = 3
+
+            for i in range(num_arrows):
+                # drawLine2D(x1, y1, x2, y2, color, camera)
+                drawLine2D(x_pos, y_pos, x_pos - 0.5, y_pos + 0.5, [0.8,0.8,0], cam)
+                drawLine2D(x_pos, y_pos, x_pos - 0.5, y_pos - 0.5, [0.8,0.8,0], cam)
+                x_pos += 1
+            
+
 def drawPoem(p_index, p_line, dt, cam):
     global poem_line_countdown
     
@@ -466,6 +497,7 @@ def drawScene(cam, mirage, floor, obstacles, powerups, luna, dt, score, num_shie
     drawScoreCounter(-3, 4, cam, score, [1,0,0])
     drawSpeedArrows(cam)
     drawShieldHexagon(cam)
+    drawAgilityArrows(mirage, cam)
     drawPoem(poem_index, poem_line, dt, cam)
     #drawOrigin()
 

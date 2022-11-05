@@ -23,6 +23,7 @@ class mirage:
 
         self.boost_remaining = 0
         self.shields_remaining = 0
+        self.agility_remaining = 0
 
     def get_color(self):
         return self.color
@@ -59,6 +60,13 @@ class mirage:
             self.speed -= self.decel/5 * dt
 
     def update_bank(self, bank_cmd, dt):
+        
+        if self.agility_remaining > 0:
+            self.agility_remaining -= dt
+
+        if self.agility_remaining < 0:
+            self.agility_remaining = 0
+        
         if self.bank == 0 and bank_cmd == 0:
             return
 
@@ -85,4 +93,11 @@ class mirage:
                         self.bank = -self.max_bank
 
     def get_side_speed(self, dt):
-        return 71 * math.radians(self.bank) * dt
+        if self.agility_remaining and self.agility_remaining > 24:
+            return (71 + ((117 - 71) * (25 - self.agility_remaining))) * math.radians(self.bank) * dt
+        elif self.agility_remaining and self.agility_remaining < 1:
+            return (71 + ((117 - 71) * (self.agility_remaining))) * math.radians(self.bank) * dt
+        elif self.agility_remaining:
+            return 117 * math.radians(self.bank) * dt
+        else:
+            return 71 * math.radians(self.bank) * dt

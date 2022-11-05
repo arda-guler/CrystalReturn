@@ -82,6 +82,7 @@ def main():
             
     model_powerup_speed = pywavefront.Wavefront("data/models/powerup.obj", collect_faces=True)
     model_powerup_invul = pywavefront.Wavefront("data/models/shield.obj", collect_faces=True)
+    model_powerup_agility = pywavefront.Wavefront("data/models/agility.obj", collect_faces=True)
 
     print("Setting up the game scene...")
     # CREATE INITIAL GAME OBJECTS
@@ -109,6 +110,7 @@ def main():
 
     powerups = []
     powerups_max_num = 3
+    powerup_chance_per_thousand = 3
 
     wing_touch_volume = 0
     engine_volume = player.speed / (player.boost_speed * 4)
@@ -144,7 +146,7 @@ def main():
             obstacles.append(new_obstacle)
 
         # POWERUP GENERATION
-        if len(powerups) < powerups_max_num and random.randint(0, 1000) > 998:
+        if len(powerups) < powerups_max_num and random.randint(0, 1000) > (1000 - powerup_chance_per_thousand):
 
             if luna.height > 0:
                 chance_boost = max(min(1 - (luna.height/300), 1), 0)
@@ -154,7 +156,7 @@ def main():
             powerup_roll = random.uniform(0, 1)
             
             if powerup_roll > chance_boost:
-                powerup_type = random.choice(["invulnerability"])
+                powerup_type = random.choice(["invulnerability", "agility"])
             else:
                 powerup_type = "speed"
             
@@ -167,6 +169,11 @@ def main():
                 new_size = vec3(3, 3, 3)
                 new_pos = vec3(random.uniform(-250, 250), new_size.y/2, -500 + random.uniform(-100, 100))
                 new_powerup = invulnerability(new_pos, new_size, model_powerup_invul)
+
+            elif powerup_type == "agility":
+                new_size = vec3(3,3,3)
+                new_pos = vec3(random.uniform(-250, 250), new_size.y/2, -500 + random.uniform(-100, 100))
+                new_powerup = agility(new_pos, new_size, model_powerup_agility)
                 
             powerups.append(new_powerup)
 
@@ -174,6 +181,19 @@ def main():
         player.update_speed(dt)
         player.update_bank(bank_cmd, dt)
         luna.update_height(player.speed, dt)
+
+        # POWERUP GENERATION RATE UPDATE
+        if luna.height <= 50:
+            powerups_max_num = 2
+            powerup_chance_per_thousand = 2
+            
+        elif 15 <= luna.height < 50:
+            powerups_max_num = 3
+            powerup_chance_per_thousand = 3
+            
+        else:
+            powerups_max_num = 3
+            powerup_chance_per_thousand = 5
 
         # OBSTACLE UPDATE AND CLEANUP
         crash = False
@@ -221,6 +241,12 @@ def main():
                     elif p.powerup_type == "invulnerability" and player.shields_remaining < 2:
                         play_sfx("shield_pickup", 0, 1, 0.4)
                         player.shields_remaining += 1
+                        powerups.remove(p)
+                        del p
+
+                    elif p.powerup_type == "agility":
+                        play_sfx("agility_pickup", 0, 1, 0.4)
+                        player.agility_remaining = 25
                         powerups.remove(p)
                         del p
 

@@ -18,6 +18,7 @@ from sound import *
 from terrain import *
 from vector3 import *
 from poems import poem_list
+from palettes import palettes_dict
 
 def get_os_type():
     return os.name
@@ -43,7 +44,56 @@ def flush_input():
         termios.tcflush(sys.stdin, termios.TCIOFLUSH)
 
 def main():
-    global vp_size_changed
+    global vp_size_changed, old_palette, current_palette, palette_set_tick, palette_transform
+
+    def set_palette(set_tick, game_tick, old_palette, new_palette):
+
+        if game_tick - set_tick < 250:
+            a = (game_tick - set_tick)/250
+            c_clear = calcTransparentColor(old_palette["background"], new_palette["background"], alpha=a)
+            c_obst = calcTransparentColor(old_palette["obstacle"], new_palette["obstacle"], alpha=a)
+            c_pspeed = calcTransparentColor(old_palette["powerup_speed"], new_palette["powerup_speed"], alpha=a)
+            c_pinvul = calcTransparentColor(old_palette["powerup_invulnerability"], new_palette["powerup_invulnerability"], alpha=a)
+            c_pagilt = calcTransparentColor(old_palette["powerup_agility"], new_palette["powerup_agility"], alpha=a)
+            c_mirage = calcTransparentColor(old_palette["mirage"], new_palette["mirage"], alpha=a)
+            c_luna = calcTransparentColor(old_palette["luna"], new_palette["luna"], alpha=a)
+            c_floor = calcTransparentColor(old_palette["terrain"], new_palette["terrain"], alpha=a)
+            
+            glClearColor(c_clear[0], c_clear[1], c_clear[2], 1)
+            
+            for o in obstacles:
+                o.set_color(c_obst)
+
+            for p in powerups:
+                if type(p) == speed_boost:
+                    p.set_color(c_pspeed)
+                elif type(p) == invulnerability:
+                    p.set_color(c_pinvul)
+                elif type(p) == agility:
+                    p.set_color(c_pagilt)
+
+            player.set_color(c_mirage)
+            luna.set_color(c_luna)
+            floor.set_color(c_floor)
+
+        else:
+            glClearColor(current_palette["background"][0], current_palette["background"][1], current_palette["background"][2], 1)
+            
+            for o in obstacles:
+                o.set_color(current_palette["obstacle"])
+
+            for p in powerups:
+                if type(p) == speed_boost:
+                    p.set_color(current_palette["powerup_speed"])
+                elif type(p) == invulnerability:
+                    p.set_color(current_palette["powerup_invulnerability"])
+                elif type(p) == agility:
+                    p.set_color(current_palette["powerup_agility"])
+
+            player.set_color(current_palette["mirage"])
+            luna.set_color(current_palette["luna"])
+            floor.set_color(current_palette["terrain"])
+            palette_transform = False
 
     # INITIALIZE ESSENTIALS
     print("Initializing GLFW...")
@@ -63,7 +113,7 @@ def main():
     gluPerspective(50, window_x/window_y, 0.005, 10000)
     glEnable(GL_CULL_FACE)
     glEnable(GL_POINT_SMOOTH)
-    glClearColor(0.1, 0.1, 0.25, 1)
+    glClearColor(current_palette["background"][0], current_palette["background"][1], current_palette["background"][2], 1)
     glPointSize(3)
 
     os_name = str(get_os_type())
@@ -89,10 +139,10 @@ def main():
     main_cam = camera("main_cam", vec3(0,0,0), [[1,0,0],[0,1,0],[0,0,1]], True)
     main_cam.move(vec3(0,-3,-13))
 
-    floor = terrain()
+    floor = terrain(current_palette["terrain"])
 
-    player = mirage("mirageAlpha", 100)
-    luna = Luna(250)
+    player = mirage("mirageAlpha", 100, 0, current_palette["mirage"])
+    luna = Luna(250, current_palette["luna"])
 
     score = 0
     poem_index = random.randint(0, len(poem_list)-1)
@@ -105,7 +155,8 @@ def main():
         new_size = vec3(random.uniform(1, 5), random.uniform(0.5, 3), random.uniform(1, 5))
         new_pos = vec3(random.uniform(-250, 250), 0, -500 + random.uniform(-100, 300))
         new_rot = vec3(0, random.randint(0, 360), 0)
-        new_obstacle = rectangular_prism(new_pos, new_rot, new_size, new_model)
+        new_color = current_palette["obstacle"]
+        new_obstacle = rectangular_prism(new_pos, new_rot, new_size, new_model, new_color)
         obstacles.append(new_obstacle)
 
     powerups = []
@@ -134,6 +185,12 @@ def main():
         if keyboard.is_pressed("D"):
             bank_cmd = 1
 
+##        if keyboard.is_pressed("N"):
+##            old_palette = current_palette
+##            current_palette = random.choice(list(palettes_dict.values()))
+##            palette_set_tick = game_tick
+##            palette_transform = True
+
         cycle_start = time.perf_counter()
 
         # OBSTACLE GENERATION
@@ -142,7 +199,8 @@ def main():
             new_size = vec3(random.uniform(1, 5), random.uniform(0.5, 3), random.uniform(1, 5))
             new_pos = vec3(random.uniform(-250, 250), 0, -500 + random.uniform(-100, 100))
             new_rot = vec3(0, random.randint(0, 360), 0)
-            new_obstacle = rectangular_prism(new_pos, new_rot, new_size, new_model)
+            new_color = current_palette["obstacle"]
+            new_obstacle = rectangular_prism(new_pos, new_rot, new_size, new_model, new_color)
             obstacles.append(new_obstacle)
 
         # POWERUP GENERATION
@@ -163,17 +221,20 @@ def main():
             if powerup_type == "speed":
                 new_size = vec3(5, 5, 5)
                 new_pos = vec3(random.uniform(-250, 250), new_size.y/2, -500 + random.uniform(-100, 100))
-                new_powerup = speed_boost(new_pos, new_size, model_powerup_speed)
+                new_color = current_palette["powerup_speed"]
+                new_powerup = speed_boost(new_pos, new_size, model_powerup_speed, new_color)
 
             elif powerup_type == "invulnerability":
                 new_size = vec3(3, 3, 3)
                 new_pos = vec3(random.uniform(-250, 250), new_size.y/2, -500 + random.uniform(-100, 100))
-                new_powerup = invulnerability(new_pos, new_size, model_powerup_invul)
+                new_color = current_palette["powerup_invulnerability"]
+                new_powerup = invulnerability(new_pos, new_size, model_powerup_invul, new_color)
 
             elif powerup_type == "agility":
                 new_size = vec3(3,3,3)
                 new_pos = vec3(random.uniform(-250, 250), new_size.y/2, -500 + random.uniform(-100, 100))
-                new_powerup = agility(new_pos, new_size, model_powerup_agility)
+                new_color = current_palette["powerup_agility"]
+                new_powerup = agility(new_pos, new_size, model_powerup_agility, new_color)
                 
             powerups.append(new_powerup)
 
@@ -284,16 +345,33 @@ def main():
         if not is_music_playing():
             play_random_bgm()
 
+        # PALETTE
+        if palette_transform:
+            set_palette(palette_set_tick, game_tick, old_palette, current_palette)
+
         # POEM
         poem_line = max(int((score-5000)/15000), -1)
 
+        if game_tick > 50 and game_tick % 10000 == 0:
+            old_palette = current_palette
+            t_palette = random.choice(list(palettes_dict.values()))
+            while t_palette == current_palette:
+                t_palette = random.choice(list(palettes_dict.values()))
+            current_palette = t_palette
+            palette_set_tick = game_tick
+            palette_transform = True
+
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
         drawScene(main_cam, player, floor, obstacles, powerups, luna, dt, score,
-                  player.shields_remaining, poem_index, poem_line)
+                  player.shields_remaining, poem_index, poem_line, current_palette)
         glfw.swap_buffers(mwin)
 
         dt = time.perf_counter() - cycle_start
         score += player.speed * dt
         game_tick += 1
 
+old_palette = palettes_dict["crystal"]
+current_palette = palettes_dict["crystal"]
+palette_set_tick = -1E7
+palette_transform = False
 main()

@@ -5,3 +5,6 @@ class Luna:
 
     def update_height(self, speed, dt):
         self.height -= (150 - speed) * dt * 0.05
+
+    def set_color(self, new_color):
+        self.color = new_color

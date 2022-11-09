@@ -101,3 +101,7 @@ class mirage:
             return 117 * math.radians(self.bank) * dt
         else:
             return 71 * math.radians(self.bank) * dt
+
+    def set_color(self, new_color):
+        self.color = new_color
+

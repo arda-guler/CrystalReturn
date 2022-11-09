@@ -248,7 +248,7 @@ def drawObstaclesAndPowerups(comblist):
                              [o.size.x, o.size.y, o.size.z],
                              main_color)
 
-def drawMirage(mirage):
+def drawMirage(mirage, current_palette):
 
     drawModelGeneric(mirage.model, [0,0,0], [-mirage.bank, 0, 0, 1], False, mirage.get_color(), True, False)
 
@@ -259,7 +259,7 @@ def drawMirage(mirage):
     spark_spread = 0.05
     if mirage.bank >= mirage.max_bank:
         
-        glColor(0, 1, 1)
+        glColor(current_palette["sparks"][0], current_palette["sparks"][1], current_palette["sparks"][2])
         for i in range(5):
             glPointSize(random.randint(2,4))
             glBegin(GL_POINTS)
@@ -268,7 +268,7 @@ def drawMirage(mirage):
 
     elif mirage.bank <= -mirage.max_bank:
         
-        glColor(0, 1, 1)
+        glColor(current_palette["sparks"][0], current_palette["sparks"][1], current_palette["sparks"][2])
         for i in range(5):
             glPointSize(random.randint(2,4))
             glBegin(GL_POINTS)
@@ -277,7 +277,7 @@ def drawMirage(mirage):
 
     # do engine plume
     plume_spread = 0.25
-    glColor(1, 0, 1)
+    glColor(current_palette["plume"][0], current_palette["plume"][1], current_palette["plume"][2])
     for i in range(max(15 * int(mirage.speed/50), 15)):
         glPointSize(random.randint(8,10))
         glBegin(GL_POINTS)
@@ -293,7 +293,7 @@ def drawMirage(mirage):
     # now get out
     glPopMatrix()
 
-def drawSpeedArrows(cam):
+def drawSpeedArrows(cam, current_palette):
     global speed_time_remaining
 
     if not speed_time_remaining:
@@ -306,27 +306,27 @@ def drawSpeedArrows(cam):
     state = int(speed_time_remaining*10 % 4)
 
     if state == 3:
-        drawLine2D(6, 2, 5, 0, [0,1,0], cam)
-        drawLine2D(6, -2, 5, 0, [0,1,0], cam)
+        drawLine2D(6, 2, 5, 0, current_palette["powerup_speed"], cam)
+        drawLine2D(6, -2, 5, 0, current_palette["powerup_speed"], cam)
 
-        drawLine2D(-6, 2, -5, 0, [0,1,0], cam)
-        drawLine2D(-6, -2, -5, 0, [0,1,0], cam)
+        drawLine2D(-6, 2, -5, 0, current_palette["powerup_speed"], cam)
+        drawLine2D(-6, -2, -5, 0, current_palette["powerup_speed"], cam)
         
     elif state == 2:
-        drawLine2D(5, 2, 4, 0, [0,1,0], cam)
-        drawLine2D(5, -2, 4, 0, [0,1,0], cam)
+        drawLine2D(5, 2, 4, 0, current_palette["powerup_speed"], cam)
+        drawLine2D(5, -2, 4, 0, current_palette["powerup_speed"], cam)
 
-        drawLine2D(-5, 2, -4, 0, [0,1,0], cam)
-        drawLine2D(-5, -2, -4, 0, [0,1,0], cam)
+        drawLine2D(-5, 2, -4, 0, current_palette["powerup_speed"], cam)
+        drawLine2D(-5, -2, -4, 0, current_palette["powerup_speed"], cam)
         
     elif state == 1:
-        drawLine2D(4, 2, 3, 0, [0,1,0], cam)
-        drawLine2D(4, -2, 3, 0, [0,1,0], cam)
+        drawLine2D(4, 2, 3, 0, current_palette["powerup_speed"], cam)
+        drawLine2D(4, -2, 3, 0, current_palette["powerup_speed"], cam)
 
-        drawLine2D(-4, 2, -3, 0, [0,1,0], cam)
-        drawLine2D(-4, -2, -3, 0, [0,1,0], cam)
+        drawLine2D(-4, 2, -3, 0, current_palette["powerup_speed"], cam)
+        drawLine2D(-4, -2, -3, 0, current_palette["powerup_speed"], cam)
         
-def drawShieldHexagon(cam):
+def drawShieldHexagon(cam, current_palette):
     global shield_hexagon_step
 
     if not shield_hexagon_step:
@@ -334,23 +334,23 @@ def drawShieldHexagon(cam):
 
     hex_size = (1.1 - int(shield_hexagon_step % 50) * 0.025)
     
-    drawLine2D(3*hex_size, 5.196*hex_size, -3*hex_size, 5.196*hex_size, [1,0,1], cam)
-    drawLine2D(3*hex_size, -5.196*hex_size, -3*hex_size, -5.196*hex_size, [1,0,1], cam)
-    drawLine2D(6*hex_size, 0, 3*hex_size, 5.196*hex_size, [1,0,1], cam)
-    drawLine2D(-6*hex_size, 0, -3*hex_size, 5.196*hex_size, [1,0,1], cam)
-    drawLine2D(6*hex_size, 0, 3*hex_size, -5.196*hex_size, [1,0,1], cam)
-    drawLine2D(-6*hex_size, 0, -3*hex_size, -5.196*hex_size, [1,0,1], cam)
+    drawLine2D(3*hex_size, 5.196*hex_size, -3*hex_size, 5.196*hex_size, current_palette["powerup_invulnerability"], cam)
+    drawLine2D(3*hex_size, -5.196*hex_size, -3*hex_size, -5.196*hex_size, current_palette["powerup_invulnerability"], cam)
+    drawLine2D(6*hex_size, 0, 3*hex_size, 5.196*hex_size, current_palette["powerup_invulnerability"], cam)
+    drawLine2D(-6*hex_size, 0, -3*hex_size, 5.196*hex_size, current_palette["powerup_invulnerability"], cam)
+    drawLine2D(6*hex_size, 0, 3*hex_size, -5.196*hex_size, current_palette["powerup_invulnerability"], cam)
+    drawLine2D(-6*hex_size, 0, -3*hex_size, -5.196*hex_size, current_palette["powerup_invulnerability"], cam)
 
     shield_hexagon_step -= 1
 
-def drawLuna(luna, cam):
+def drawLuna(luna, cam, current_palette):
 
     glPointSize(15)
 
     if luna.height > 50:
         drawPoint2D(0, luna.height/150, luna.color, cam)
     elif luna.height > 0:
-        background_color = [0.1, 0.1, 0.25]
+        background_color = current_palette["background"]
         alpha = luna.height/50
         color = calcTransparentColor(background_color, luna.color, alpha)
         drawPoint2D(0, luna.height/150, color, cam)
@@ -409,20 +409,20 @@ def drawModelGeneric(model, pos, rot, scale, color, line=True, poly=True):
 
     glPopMatrix()
 
-def drawShieldCount(num_shields, score):
+def drawShieldCount(num_shields, score, current_palette):
     global shield_model
 
     rotation = (score % 500)/500 * 360
 
     if num_shields > 0:
         # shield 1
-        drawModelGeneric(shield_model, [6,-2.5,-1], [rotation,0,1,0], False, [1,0,1])
+        drawModelGeneric(shield_model, [6,-2.5,-1], [rotation,0,1,0], False, current_palette["powerup_invulnerability"])
         
         if num_shields == 2:
             # shield 2
-            drawModelGeneric(shield_model, [8,-2.5,-1], [rotation,0,1,0], False, [1,0,1])
+            drawModelGeneric(shield_model, [8,-2.5,-1], [rotation,0,1,0], False, current_palette["powerup_invulnerability"])
 
-def drawAgilityArrows(mirage, cam):
+def drawAgilityArrows(mirage, cam, current_palette):
     
     if not mirage.agility_remaining:
         return
@@ -437,8 +437,8 @@ def drawAgilityArrows(mirage, cam):
 
             for i in range(num_arrows):
                 # drawLine2D(x1, y1, x2, y2, color, camera)
-                drawLine2D(x_pos, y_pos, x_pos + 0.5, y_pos + 0.5, [0.8,0.8,0], cam)
-                drawLine2D(x_pos, y_pos, x_pos + 0.5, y_pos - 0.5, [0.8,0.8,0], cam)
+                drawLine2D(x_pos, y_pos, x_pos + 0.5, y_pos + 0.5, current_palette["powerup_agility"], cam)
+                drawLine2D(x_pos, y_pos, x_pos + 0.5, y_pos - 0.5, current_palette["powerup_agility"], cam)
                 x_pos -= 1
 
         # arrows to right
@@ -448,8 +448,8 @@ def drawAgilityArrows(mirage, cam):
 
             for i in range(num_arrows):
                 # drawLine2D(x1, y1, x2, y2, color, camera)
-                drawLine2D(x_pos, y_pos, x_pos - 0.5, y_pos + 0.5, [0.8,0.8,0], cam)
-                drawLine2D(x_pos, y_pos, x_pos - 0.5, y_pos - 0.5, [0.8,0.8,0], cam)
+                drawLine2D(x_pos, y_pos, x_pos - 0.5, y_pos + 0.5, current_palette["powerup_agility"], cam)
+                drawLine2D(x_pos, y_pos, x_pos - 0.5, y_pos - 0.5, current_palette["powerup_agility"], cam)
                 x_pos += 1
             
 
@@ -472,7 +472,7 @@ def drawPoem(p_index, p_line, dt, cam):
         render_AN(current_line, [1,0,0], [-5, 3], cam, 0.075)
 
 def drawScene(cam, mirage, floor, obstacles, powerups, luna, dt, score, num_shields,
-              poem_index, poem_line):
+              poem_index, poem_line, current_palette):
     
     global speed_time_remaining, last_num_shields, shield_hexagon_step, last_poem_line, poem_line_countdown
     speed_time_remaining = mirage.boost_remaining
@@ -488,16 +488,16 @@ def drawScene(cam, mirage, floor, obstacles, powerups, luna, dt, score, num_shie
     comblist = obstacles + powerups
     comblist.sort(key=lambda x: mag([-x.pos.x - cam.pos.x, -x.pos.y - cam.pos.y, -x.pos.z - cam.pos.z]), reverse=True)
 
-    drawLuna(luna, cam)
+    drawLuna(luna, cam, current_palette)
     drawLine2D(-35, 0, 35, 0, floor.color, cam) # draw a horizon
     drawGround(floor, mirage, dt)
     drawObstaclesAndPowerups(comblist)
-    drawMirage(mirage)
-    drawShieldCount(num_shields, score)
+    drawMirage(mirage, current_palette)
+    drawShieldCount(num_shields, score, current_palette)
     drawScoreCounter(-3, 4, cam, score, [1,0,0])
-    drawSpeedArrows(cam)
-    drawShieldHexagon(cam)
-    drawAgilityArrows(mirage, cam)
+    drawSpeedArrows(cam, current_palette)
+    drawShieldHexagon(cam, current_palette)
+    drawAgilityArrows(mirage, cam, current_palette)
     drawPoem(poem_index, poem_line, dt, cam)
     #drawOrigin()
 

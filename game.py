@@ -349,10 +349,15 @@ def main():
         if palette_transform:
             set_palette(palette_set_tick, game_tick, old_palette, current_palette)
 
+        if game_tick - palette_set_tick < 250:
+            palette_change_str = current_palette["name"]
+        else:
+            palette_change_str = None
+
         # POEM
         poem_line = max(int((score-5000)/15000), -1)
 
-        if game_tick > 50 and game_tick % 10000 == 0:
+        if game_tick > 50 and game_tick % 5000 == 0:
             old_palette = current_palette
             t_palette = random.choice(list(palettes_dict.values()))
             while t_palette == current_palette:
@@ -363,7 +368,8 @@ def main():
 
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
         drawScene(main_cam, player, floor, obstacles, powerups, luna, dt, score,
-                  player.shields_remaining, poem_index, poem_line, current_palette)
+                  player.shields_remaining, poem_index, poem_line, current_palette,
+                  palette_change_str)
         glfw.swap_buffers(mwin)
 
         dt = time.perf_counter() - cycle_start

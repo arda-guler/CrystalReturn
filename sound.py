@@ -8,9 +8,12 @@ def init_sound():
     global bgms
     mixer.init()
 
-    for bgm in os.listdir("data/bgm"):
-        newmsc = mixer.Sound("data/bgm/" + bgm)
-        bgms[bgm[:-4]] = newmsc
+    try:
+        for bgm in os.listdir("data/bgm"):
+            newmsc = mixer.Sound("data/bgm/" + bgm)
+            bgms[bgm[:-4]] = newmsc
+    except:
+        pass
 
 def play_sfx(track, loops=0, channel=1, volume=1):
     chn = mixer.Channel(channel)

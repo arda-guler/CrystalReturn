@@ -451,7 +451,9 @@ def drawAgilityArrows(mirage, cam, current_palette):
                 drawLine2D(x_pos, y_pos, x_pos - 0.5, y_pos + 0.5, current_palette["powerup_agility"], cam)
                 drawLine2D(x_pos, y_pos, x_pos - 0.5, y_pos - 0.5, current_palette["powerup_agility"], cam)
                 x_pos += 1
-            
+
+def drawPaletteChangeStr(palette_change_str, current_palette, cam):
+    render_AN(palette_change_str, current_palette["mirage"], [2, 3], cam, 0.075)
 
 def drawPoem(p_index, p_line, dt, cam):
     global poem_line_countdown
@@ -472,7 +474,7 @@ def drawPoem(p_index, p_line, dt, cam):
         render_AN(current_line, [1,0,0], [-5, 3], cam, 0.075)
 
 def drawScene(cam, mirage, floor, obstacles, powerups, luna, dt, score, num_shields,
-              poem_index, poem_line, current_palette):
+              poem_index, poem_line, current_palette, palette_change_str):
     
     global speed_time_remaining, last_num_shields, shield_hexagon_step, last_poem_line, poem_line_countdown
     speed_time_remaining = mirage.boost_remaining
@@ -498,6 +500,8 @@ def drawScene(cam, mirage, floor, obstacles, powerups, luna, dt, score, num_shie
     drawSpeedArrows(cam, current_palette)
     drawShieldHexagon(cam, current_palette)
     drawAgilityArrows(mirage, cam, current_palette)
+    if palette_change_str:
+        drawPaletteChangeStr(palette_change_str, current_palette, cam)
     drawPoem(poem_index, poem_line, dt, cam)
     #drawOrigin()
 

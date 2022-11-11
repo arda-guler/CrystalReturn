@@ -1,6 +1,7 @@
 palettes_dict = {}
 
 crystal = {}
+crystal["name"] = "Vanishing Blue"
 crystal["background"] = (0.1, 0.1, 0.25)
 crystal["terrain"] = (0.2, 0.6, 1)
 crystal["obstacle"] = (0, 0.5, 1)
@@ -14,6 +15,7 @@ crystal["sparks"] = (0,1,1)
 palettes_dict["crystal"] = crystal
 
 sakura = {}
+sakura["name"] = "Sakura"
 sakura["background"] = (0.2, 0.1, 0.15)
 sakura["terrain"] = (0.8, 0.1, 0.8)
 sakura["obstacle"] = (1, 0, 0.5)
@@ -26,4 +28,44 @@ sakura["plume"] = (1,0.1,0.8)
 sakura["sparks"] = (0.85,0.1,0.9)
 palettes_dict["sakura"] = sakura
 
+neon = {}
+neon["name"] = "Luminous Jade"
+neon["background"] = (0, 0.15, 0)
+neon["terrain"] = (0, 0.8, 0)
+neon["obstacle"] = (0, 1, 0)
+neon["powerup_speed"] = (0, 0.8, 1)
+neon["powerup_invulnerability"] = (1, 0.1, 0.1)
+neon["powerup_agility"] = (0.9, 0.9, 0)
+neon["mirage"] = (1, 0, 1)
+neon["luna"] = (0.9, 0.9, 0.9)
+neon["plume"] = (1, 0.1, 0.8)
+neon["sparks"] = (0.2, 0.9, 0.2)
+palettes_dict["neon"] = neon
 
+rm = {}
+rm["name"] = "Rememoried"
+rm["background"] = (0, 0, 0)
+rm["terrain"] = (0.8, 0.8, 0.8)
+rm["obstacle"] = (1, 1, 1)
+rm["powerup_speed"] = (0, 1, 0)
+rm["powerup_invulnerability"] = (1, 0, 0)
+rm["powerup_agility"] = (1, 1, 0)
+rm["mirage"] = (0, 1, 0.8)
+rm["luna"] = (0.9, 0.9, 0.9)
+rm["plume"] = (0.3, 0.1, 1)
+rm["sparks"] = (0, 0.9, 0.9)
+palettes_dict["rm"] = rm
+
+tw = {}
+tw["name"] = "Timewind"
+tw["background"] = (0.04, 0.22, 0.15)
+tw["terrain"] = (0.8, 0.7, 0.05)
+tw["obstacle"] = (0.9, 0.8, 0.075)
+tw["powerup_speed"] = (0, 1, 0.3)
+tw["powerup_invulnerability"] = (1, 0, 0.4)
+tw["powerup_agility"] = (0, 0.45, 0.8)
+tw["mirage"] = (1, 0.3, 0.45)
+tw["luna"] = (0.7, 0.9, 0.9)
+tw["plume"] = (0.7, 0.2, 0.2)
+tw["sparks"] = (0.8, 0.5, 0)
+palettes_dict["tw"] = tw

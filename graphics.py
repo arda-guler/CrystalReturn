@@ -225,11 +225,11 @@ def drawCursors(cursors, camera):
             
             glPopMatrix()
 
-def drawObstaclesAndPowerups(comblist):
+def drawObstaclesAndPowerups(comblist, current_palette):
     for o in comblist:
 
         main_color = o.color
-        background_color = [0.1, 0.1, 0.25]
+        background_color = current_palette["background"]
 
         if o.pos.z < -300:
             alpha = min(max(     1-((-o.pos.z-300)/300)         , 0), 1)
@@ -412,7 +412,7 @@ def drawModelGeneric(model, pos, rot, scale, color, line=True, poly=True):
 def drawShieldCount(num_shields, score, current_palette):
     global shield_model
 
-    rotation = (score % 500)/500 * 360
+    rotation = (score % 500)/250 * 360
 
     if num_shields > 0:
         # shield 1
@@ -493,7 +493,7 @@ def drawScene(cam, mirage, floor, obstacles, powerups, luna, dt, score, num_shie
     drawLuna(luna, cam, current_palette)
     drawLine2D(-35, 0, 35, 0, floor.color, cam) # draw a horizon
     drawGround(floor, mirage, dt)
-    drawObstaclesAndPowerups(comblist)
+    drawObstaclesAndPowerups(comblist, current_palette)
     drawMirage(mirage, current_palette)
     drawShieldCount(num_shields, score, current_palette)
     drawScoreCounter(-3, 4, cam, score, [1,0,0])

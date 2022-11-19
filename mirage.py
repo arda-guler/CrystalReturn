@@ -75,8 +75,8 @@ class mirage:
                 
                 self.bank += -sign(self.bank) * self.bankspeed * (27/42) * dt
                 
-                if abs(self.bank) < 1:
-                    self.bank == 0
+                if abs(self.bank) < 0.5:
+                    self.bank = 0
 
             elif bank_cmd == 1:
                 if not self.bank >= self.max_bank:

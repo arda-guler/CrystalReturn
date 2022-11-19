@@ -373,7 +373,7 @@ def main():
         glfw.swap_buffers(mwin)
 
         dt = time.perf_counter() - cycle_start
-        score += player.speed * dt
+        score += player.speed * dt / (1 + player.shields_remaining)
         game_tick += 1
 
 old_palette = palettes_dict["crystal"]

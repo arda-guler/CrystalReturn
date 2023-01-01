@@ -17,7 +17,7 @@ from powerups import *
 from sound import *
 from terrain import *
 from vector3 import *
-from poems import poem_list
+from poems import poem_list, death_msgs
 from palettes import palettes_dict
 
 def get_os_type():
@@ -49,7 +49,12 @@ def main():
     def set_palette(set_tick, game_tick, old_palette, new_palette):
 
         if game_tick - set_tick < 250:
-            a = (game_tick - set_tick)/250
+
+            if game_tick == set_tick:
+                a = 0
+            else:
+                a = (game_tick - set_tick)/250
+                
             c_clear = calcTransparentColor(old_palette["background"], new_palette["background"], alpha=a)
             c_obst = calcTransparentColor(old_palette["obstacle"], new_palette["obstacle"], alpha=a)
             c_pspeed = calcTransparentColor(old_palette["powerup_speed"], new_palette["powerup_speed"], alpha=a)
@@ -94,11 +99,15 @@ def main():
             luna.set_color(current_palette["luna"])
             floor.set_color(current_palette["terrain"])
             palette_transform = False
+            
+            a = 1
+
+        return a
 
     # INITIALIZE ESSENTIALS
     print("Initializing GLFW...")
     glfw.init()
-
+    
     print("Initializing sound...")
     init_sound()
 
@@ -120,6 +129,7 @@ def main():
 
     dt = 0.001
     game_tick = 0
+    a = 1 # global alpha
 
     print("Loading models...")
     # LOAD MODELS (so we do not load them each time an object is generated)
@@ -142,10 +152,12 @@ def main():
     floor = terrain(current_palette["terrain"])
 
     player = mirage("mirageAlpha", 100, 0, current_palette["mirage"])
-    luna = Luna(250, current_palette["luna"])
+    #luna = Luna(250, current_palette["luna"])
+    luna = Luna(150, current_palette["luna"])
 
     score = 0
     poem_index = random.randint(0, len(poem_list)-1)
+    poem_prev_lines = 0
 
     obstacles = []
     obstacle_num = 50
@@ -165,6 +177,7 @@ def main():
 
     wing_touch_volume = 0
     engine_volume = player.speed / (player.boost_speed * 4)
+    bgm_world = "lunar"
     play_sfx("engine", -1, 6, engine_volume)
     play_random_bgm()
 
@@ -273,8 +286,10 @@ def main():
                         stop_channel(6)
                         stop_channel(7)
                         play_sfx("crash", 0, 1, 1)
-                        print("CRASH!")
+                        print("\n", random.choice(death_msgs))
                         time.sleep(5)
+                        glfw.destroy_window(mwin)
+                        input()
                         quit()
 
                     else:
@@ -342,38 +357,87 @@ def main():
         set_channel_volume(6, engine_volume)
 
         # BGM
+        if luna.height > 0 and not bgm_world == "lunar":
+            fade_out_bgm()
+            bgm_world = "lunar"
+            game_tick = 5000
+        elif luna.height < -10 and not bgm_world == "underworld":
+            fade_out_bgm()
+            bgm_world = "underworld"
+            game_tick = 5000
+            
         if not is_music_playing():
-            play_random_bgm()
+            play_random_bgm(bgm_world)
+
+        # POEM
+        poem_line = max(int((score-5000)/5000), -1) - poem_prev_lines
+
+        if poem_line > len(poem_list[poem_index]) and len(poem_list) > 1:
+            old_poem_index = poem_index
+            while poem_index == old_poem_index:
+                poem_prev_lines += len(poem_list[poem_index])
+                poem_index = random.randint(0, len(poem_list)-1)
+
+        # PALETTE CHANGE
+        if game_tick > 50 and game_tick % 5000 == 0:
+            old_palette = current_palette
+
+            # allow sonsuzluk if luna is above 100
+            if luna.height > 100:
+                t_palette = random.choice(list(palettes_dict.values()))
+                while t_palette == current_palette or t_palette == palettes_dict["ix"]:
+                    t_palette = random.choice(list(palettes_dict.values()))
+
+            # regular palettes
+            elif luna.height > 0:
+                t_palette = random.choice(list(palettes_dict.values()))
+                while t_palette == current_palette or t_palette == palettes_dict["ix"] or t_palette == palettes_dict["us"]:
+                    t_palette = random.choice(list(palettes_dict.values()))
+
+            # change to queen of hearts if luna is below horizon
+            elif not current_palette == palettes_dict["ix"]:
+                t_palette = palettes_dict["ix"]
+                
+            current_palette = t_palette
+            palette_set_tick = game_tick
+            palette_transform = True
 
         # PALETTE
         if palette_transform:
-            set_palette(palette_set_tick, game_tick, old_palette, current_palette)
+            a = set_palette(palette_set_tick, game_tick, old_palette, current_palette)
 
         if game_tick - palette_set_tick < 250:
             palette_change_str = current_palette["name"]
         else:
             palette_change_str = None
 
-        # POEM
-        poem_line = max(int((score-5000)/15000), -1)
-
-        if game_tick > 50 and game_tick % 5000 == 0:
-            old_palette = current_palette
-            t_palette = random.choice(list(palettes_dict.values()))
-            while t_palette == current_palette:
-                t_palette = random.choice(list(palettes_dict.values()))
-            current_palette = t_palette
-            palette_set_tick = game_tick
-            palette_transform = True
+        if a and 0 < a < 1:
+            instantaneous_palette = {}
+            instantaneous_palette["name"] = ""
+            instantaneous_palette["background"] = calcTransparentColor(old_palette["background"], current_palette["background"], a)
+            instantaneous_palette["terrain"] = calcTransparentColor(old_palette["terrain"], current_palette["terrain"], a)
+            instantaneous_palette["obstacle"] = calcTransparentColor(old_palette["obstacle"], current_palette["obstacle"], a)
+            instantaneous_palette["powerup_speed"] = calcTransparentColor(old_palette["powerup_speed"], current_palette["powerup_speed"], a)
+            instantaneous_palette["powerup_invulnerability"] = calcTransparentColor(old_palette["powerup_invulnerability"], current_palette["powerup_invulnerability"], a)
+            instantaneous_palette["powerup_agility"] = calcTransparentColor(old_palette["powerup_agility"], current_palette["powerup_agility"], a)
+            instantaneous_palette["mirage"] = calcTransparentColor(old_palette["mirage"], current_palette["mirage"], a)
+            instantaneous_palette["luna"] = calcTransparentColor(old_palette["luna"], current_palette["luna"], a)
+            instantaneous_palette["plume"] = calcTransparentColor(old_palette["plume"], current_palette["plume"], a)
+            instantaneous_palette["sparks"] = calcTransparentColor(old_palette["sparks"], current_palette["sparks"], a)
+        elif a and a == 0:
+            instantaneous_palette = old_palette
+        else:
+            instantaneous_palette = current_palette
 
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
         drawScene(main_cam, player, floor, obstacles, powerups, luna, dt, score,
-                  player.shields_remaining, poem_index, poem_line, current_palette,
+                  player.shields_remaining, poem_index, poem_line, instantaneous_palette,
                   palette_change_str)
         glfw.swap_buffers(mwin)
 
         dt = time.perf_counter() - cycle_start
-        score += player.speed * dt / (1 + player.shields_remaining)
+        if luna.height > 0:
+            score += player.speed * 3 * dt / (3 + player.shields_remaining)
         game_tick += 1
 
 old_palette = palettes_dict["crystal"]

@@ -20,6 +20,8 @@ last_num_shields = 0
 
 poem_line_countdown = 0
 last_poem_line = 0
+pline_x = 0
+pline_y = 0
 
 def calcTransparentColor(background_color, main_color, alpha=0.5):
     delta_r = background_color[0] - main_color[0]
@@ -119,12 +121,12 @@ def drawGround(floor, mirage, dt, size=250, divisions=20):
     glBegin(GL_LINES)
     
     for xi in range(divisions + 1):
-        glVertex3f(2* xi * (size/divisions) - size + floor_x_offset, y_floor + random.uniform(-1, 1) * shield_hexagon_step/500, -size)
-        glVertex3f(2* xi * (size/divisions) - size + floor_x_offset, y_floor + random.uniform(-1, 1) * shield_hexagon_step/500, +size)
+        glVertex3f(2* xi * (size/divisions) - size + floor_x_offset, y_floor, -size)
+        glVertex3f(2* xi * (size/divisions) - size + floor_x_offset, y_floor, +size)
 
     for zi in range(divisions + 1):
-        glVertex3f(-size, y_floor + random.uniform(-1, 1) * shield_hexagon_step/500, 2* zi * (size/divisions) - size + floor_z_offset)
-        glVertex3f(+size, y_floor + random.uniform(-1, 1) * shield_hexagon_step/500, 2* zi * (size/divisions) - size + floor_z_offset)
+        glVertex3f(-size, y_floor, 2* zi * (size/divisions) - size + floor_z_offset)
+        glVertex3f(+size, y_floor, 2* zi * (size/divisions) - size + floor_z_offset)
 
     glEnd()
 
@@ -249,8 +251,9 @@ def drawObstaclesAndPowerups(comblist, current_palette):
                              main_color)
 
 def drawMirage(mirage, current_palette):
+    global shield_hexagon_step
 
-    drawModelGeneric(mirage.model, [0,0,0], [-mirage.bank, 0, 0, 1], False, mirage.get_color(), True, False)
+    drawModelGeneric(mirage.model, [random.uniform(-1, 1) * shield_hexagon_step/500, random.uniform(-1, 1) * shield_hexagon_step/500, 0], [-mirage.bank, 0, 0, 1], False, mirage.get_color(), True, False)
 
     glPushMatrix()
     glTranslatef(0, 0, 0)
@@ -456,7 +459,7 @@ def drawPaletteChangeStr(palette_change_str, current_palette, cam):
     render_AN(palette_change_str, current_palette["mirage"], [2, 3], cam, 0.075)
 
 def drawPoem(p_index, p_line, dt, cam):
-    global poem_line_countdown
+    global poem_line_countdown, pline_y, pline_x
     
     p = poem_list[p_index]
     p_line_max = len(p)
@@ -466,12 +469,33 @@ def drawPoem(p_index, p_line, dt, cam):
 
     if poem_line_countdown < 0:
         poem_line_countdown = 0
+        y_limit_top = 2.5
+        y_limit_bottom = -2.75
+        x_limit_left = -5.5
+        x_limit_right = 5.5
+
+        pline_y = random.uniform(y_limit_bottom, y_limit_top)
+        pline_x = random.uniform(x_limit_left, x_limit_right)
+        
         return
     
     if poem_line_countdown:
         current_line = p[p_line]
         poem_line_countdown -= dt
-        render_AN(current_line, [1,0,0], [-5, 3], cam, 0.075)
+
+        str_len = len(current_line)
+
+        if str_len < 31:
+            str_graphics_size = str_len * 0.075 * 1.75
+        else:
+            str_graphics_size = str_len * 0.06 * 1.75
+        
+        if str_len < 31:
+            #render_AN(current_line, [1,0,0], [-5, 3], cam, 0.075)
+            render_AN(current_line, [1,0,0], [max(pline_x - str_graphics_size, -5.5), pline_y], cam, 0.075)
+        else:
+            #render_AN(current_line, [1,0,0], [-5, 2.5], cam, 0.06)
+            render_AN(current_line, [1,0,0], [max(pline_x - str_graphics_size, -5.5), pline_y], cam, 0.06)
 
 def drawScene(cam, mirage, floor, obstacles, powerups, luna, dt, score, num_shields,
               poem_index, poem_line, current_palette, palette_change_str):

@@ -416,7 +416,7 @@ def render_AN(render_string, color, start_pt, cam, font_size=0.1):
     spacing = font_size * 1.75
 
     for char in render_string:
-        if not char == "." and not char == " ":
+        if not char == "." and not char == " " and not char == "," and not char == "'":
             try:
                 lines = alphanumerics[char]
                 for line in lines:
@@ -432,6 +432,20 @@ def render_AN(render_string, color, start_pt, cam, font_size=0.1):
             x = draw_start_x
             y = start_pt[1] - font_size * 4
             drawPoint2D(x, y, color, cam)
+
+        elif char == ",":
+            x1 = draw_start_x
+            y1 = start_pt[1] - font_size * 4
+            x2 = x1 - font_size * 0.5
+            y2 = y1 - font_size * 0.5
+            drawLine2D(x1, y1, x2, y2, color, cam)
+
+        elif char == "'":
+            x1 = draw_start_x
+            y1 = start_pt[1]
+            x2 = x1 - font_size * 0.5
+            y2 = y1 - font_size * 0.5
+            drawLine2D(x1, y1, x2, y2, color, cam)
 
         else:
             # it is a space or unknown char

@@ -1,14 +1,7 @@
 # Crystal Return
 
-## Requirements
-You need to have Python 3 with following packages installed:
-- pyopengl
-- glfw
-- keyboard
-- pywavefront
-- pygame
-
 ## How To Play
+Install requirements.
 Run game.py to start.
 
 Use **A** and **D** keys to move left and right.
